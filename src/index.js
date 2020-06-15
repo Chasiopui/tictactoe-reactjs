@@ -15,24 +15,34 @@ class Board extends React.Component {
     super(props);
     this.state = {
       value: 3,
-      scaleOption: [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
+      // scaleOption: [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
+      scaleDropdown: Array(49).fill(null),
       boards:[],
       squares: Array(9).fill(null),
       xScore: 0,
       oScore: 0,
       xIsNext: true
     };
+
     this.handleChange = this.handleChange.bind(this);
     this.renderScalable = this.renderScalable.bind(this);
     this.renderSquare = this.renderSquare.bind(this);
-    // this.handleScore = this.handleScore.bind(this);
+  }
+
+  async componentDidMount() {
+    const newScaleDropdown = this.state.scaleDropdown.slice();
+    for (var a = 0; a < this.state.scaleDropdown.length; a++) {
+      newScaleDropdown[a] = parseInt(a+3)
+    }
+    await this.setState({
+      scaleDropdown: newScaleDropdown
+    })
   }
 
   async handleClick(i) {
     const squares = this.state.squares.slice()
     // console.log(i)
     if (await calculateWinner(i,squares) || squares[i]) {
-      console.log(i,squares[i])
       return;
     }
     squares[i] = this.state.xIsNext ? 'X' : 'O';
@@ -114,7 +124,6 @@ class Board extends React.Component {
   newGame() {
     this.setState({
       value: 3,
-      // scaleOption: [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
       boards:[],
       squares: Array(9).fill(null),
       xIsNext: true
@@ -133,8 +142,8 @@ class Board extends React.Component {
               onChange={this.handleChange}
               className="form-control" 
               id="sel1">
-                {this.state.scaleOption.map(scales => (
-                  <option key={scales} value={scales}>{scales} </option>
+                {this.state.scaleDropdown.map(scales => (
+                  <option value={scales}>{scales} </option>
                 ))}
               </select>
             </div>
@@ -153,7 +162,6 @@ class Board extends React.Component {
 
   render() {
     const winner = calculateWinner('', this.state.squares);
-    // this.handleScore(winner)
     let status;
     if (winner) {
       status = 'Winner: ' + winner;
@@ -185,6 +193,7 @@ class Board extends React.Component {
     );
   }
 }
+
 
 class Game extends React.Component {
   render() {
