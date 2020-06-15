@@ -15,20 +15,24 @@ class Board extends React.Component {
     super(props);
     this.state = {
       value: 3,
-      scaleOption: [3,4,5,6,7,8,9],
+      scaleOption: [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
       boards:[],
       squares: Array(9).fill(null),
+      xScore: 0,
+      oScore: 0,
       xIsNext: true
     };
     this.handleChange = this.handleChange.bind(this);
     this.renderScalable = this.renderScalable.bind(this);
     this.renderSquare = this.renderSquare.bind(this);
+    // this.handleScore = this.handleScore.bind(this);
   }
 
   async handleClick(i) {
     const squares = this.state.squares.slice()
-    console.log(i)
+    // console.log(i)
     if (await calculateWinner(i,squares) || squares[i]) {
+      console.log(i,squares[i])
       return;
     }
     squares[i] = this.state.xIsNext ? 'X' : 'O';
@@ -36,6 +40,11 @@ class Board extends React.Component {
       squares: squares,
       xIsNext: !this.state.xIsNext
     })
+
+    const score = await calculateWinner(i,squares)
+    if (score !== null) {
+      this.handleScore(score)
+    }
     // console.log('index = ' + i + '; value = ' + squares[i])
     // console.log(squares[i])
     // this.state.xIsNext ? this.setState({xIsNext: false}) : this.setState({xIsNext: true})
@@ -90,6 +99,28 @@ class Board extends React.Component {
     });
   }
 
+  handleScore(winner) {
+    (winner === 'X' ? 
+      this.setState({
+        xScore: this.state.xScore + parseInt(1)
+      }) 
+    : 
+      this.setState({
+        oScore: this.state.oScore + parseInt(1)
+      })
+    )
+  }
+
+  newGame() {
+    this.setState({
+      value: 3,
+      // scaleOption: [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
+      boards:[],
+      squares: Array(9).fill(null),
+      xIsNext: true
+    })
+  }
+
   handleScale() {
     return (
       <div className="form-group">
@@ -108,7 +139,10 @@ class Board extends React.Component {
               </select>
             </div>
             <div className="col">
-            <button type="button" className="btn btn-warning" onClick={() => window.location.reload(false)}>Restart Game</button>
+              <button type="button" className="btn btn-primary" onClick={() => this.newGame()}>New Game</button>
+            </div>
+            <div className="col">
+              <button type="button" className="btn btn-warning" onClick={() => window.location.reload(false)}>Restart Score</button>
             </div>
           </div>
         </form>
@@ -119,6 +153,7 @@ class Board extends React.Component {
 
   render() {
     const winner = calculateWinner('', this.state.squares);
+    // this.handleScore(winner)
     let status;
     if (winner) {
       status = 'Winner: ' + winner;
@@ -126,12 +161,22 @@ class Board extends React.Component {
       status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
     }
 
+    const oScore = 'O Win : ' + this.state.oScore
+    const xScore = 'X Win : ' + this.state.xScore 
+
     return (
       <div>
         <div className="dropdown-scale">
           {this.handleScale()}
         </div>
         
+        <div className="score">
+          {oScore}
+          <br/>
+          {xScore}
+        </div>
+        
+        <br/><br/><br/>
         <div className="status">{status}</div>
         <div>
           {this.renderScalable()}
