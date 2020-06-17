@@ -16,8 +16,9 @@ class Board extends React.Component {
     this.state = {
       value: 3,
       currentWinner: '',
-      // scaleOption: [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
       scaleDropdown: Array(49).fill(null),
+      conditionDropdown: [2,3,4,5],
+      winningCondition: 2,
       boards:[],
       squares: Array(9).fill(null),
       xScore: 0,
@@ -25,7 +26,8 @@ class Board extends React.Component {
       xIsNext: true
     };
 
-    this.handleChange = this.handleChange.bind(this);
+    this.handleChangeScale = this.handleChangeScale.bind(this);
+    this.handleChangeWin = this.handleChangeWin.bind(this);
     this.renderScalable = this.renderScalable.bind(this);
     this.renderSquare = this.renderSquare.bind(this);
   }
@@ -42,7 +44,7 @@ class Board extends React.Component {
 
   async handleClick(i) {
     const squares = this.state.squares.slice()
-    const winner = await calculateWinner(i,squares)
+    const winner = await calculateWinner(i,squares, this.state.winningCondition)
     if(winner) {
       await this.setState({
         currentWinner: winner
@@ -58,7 +60,7 @@ class Board extends React.Component {
       xIsNext: !this.state.xIsNext
     })
 
-    const score = await calculateWinner(i,squares)
+    const score = await calculateWinner(i,squares, this.state.winningCondition)
     if (score !== null) {
       this.handleScore(score)
     }
@@ -108,12 +110,19 @@ class Board extends React.Component {
     return result
   }
 
-  async handleChange(event) {
+  async handleChangeScale(event) {
     const totalBox = parseInt(event.target.value) * parseInt(event.target.value)
     await this.setState({
       value: event.target.value,
       currentWinner: '',
       squares: Array(totalBox).fill(null)
+    });
+  }
+
+  async handleChangeWin(event) {
+    await this.setState({
+      winningCondition: event.target.value,
+      currentWinner: ''
     });
   }
 
@@ -137,25 +146,51 @@ class Board extends React.Component {
       boards:[],
       squares: Array(9).fill(null),
       xIsNext: true,
-      currentWinner: ''
+      currentWinner: '',
+      winningCondition: 2
     })
   }
 
   handleScale() {
     return (
       <div className="form-group">
-        <label htmlFor="sel1">Select Scale:</label>
+        {/* <label htmlFor="sel1">Select Scale:</label> */}
         <form>
           <div className="row">
             <div className="col">
-            <select 
-              value={this.state.value} 
-              onChange={this.handleChange}
-              className="form-control" 
-              id="sel1">
-                {this.state.scaleDropdown.map(scales => (
-                  <option value={scales}>{scales} </option>
-                ))}
+              <label htmlFor="sel1">Select Scale:</label>
+            </div>
+            <div className="col">
+              <label htmlFor="sel2">Winning Condition:</label>
+            </div>
+            <div className="col">
+              <label htmlFor="sel3"></label>
+            </div>
+            <div className="col">
+              <label htmlFor="sel3"></label>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col">
+              <select 
+                value={this.state.value} 
+                onChange={this.handleChangeScale}
+                className="form-control" 
+                id="sel1">
+                  {this.state.scaleDropdown.map(scales => (
+                    <option value={scales}>{scales} </option>
+                  ))}
+              </select>
+            </div>
+            <div className="col">
+              <select 
+                value={this.state.winningCondition} 
+                onChange={this.handleChangeWin}
+                className="form-control" 
+                id="sel1">
+                  {this.state.conditionDropdown.map(win => (
+                    <option value={win}>{win} </option>
+                  ))}
               </select>
             </div>
             <div className="col">
@@ -218,7 +253,7 @@ class Game extends React.Component {
   }
 }
 
-function calculateWinner(index, squares) {
+function calculateWinner(index, squares, winCount) {
   const rows = Math.sqrt(squares.length)
   var win = 0
   var winner = ''
@@ -227,13 +262,13 @@ function calculateWinner(index, squares) {
 
   //column dynamic
   for (let col = 0; col < rows-1; col++) {
-    if (squares[colNum] === squares[parseInt(colNum+rows)]) {
+    if (squares[colNum] === squares[parseInt(colNum+rows)] && squares[colNum] && squares[parseInt(colNum+rows)]) {
       win = win + 1
       winner = squares[colNum]
     }
     parseInt(colNum+=rows)
   }
-  if (win === rows-1 ) {
+  if (win === rows-1 || win >= parseInt(winCount-1) ) {
     return winner
   } else {
     win = 0
@@ -252,12 +287,12 @@ function calculateWinner(index, squares) {
   }
   // loop no 2 is to check on certain row index
   for (let rowCheck = low ; rowCheck < high; rowCheck++) {
-    if (squares[rowCheck] === squares[parseInt(rowCheck+1)]) {
+    if (squares[rowCheck] === squares[parseInt(rowCheck+1)] && squares[rowCheck] && squares[parseInt(rowCheck+1)]) {
       win = win + 1
       winner = squares[rowCheck]
     }
   }
-  if (win === rows-1 ) {
+  if (win === rows-1 || win >= parseInt(winCount-1)) {
     return winner
   } else {
     win = 0
@@ -300,12 +335,12 @@ function calculateWinner(index, squares) {
   
   //check left diagonal
   for (var m = 0; m < rows - 1; m++) {
-    if (squares[parseInt(m+(rows*m))] === squares[parseInt((rows*(m+1))+(m+1))]) {
+    if (squares[parseInt(m+(rows*m))] === squares[parseInt((rows*(m+1))+(m+1))] && squares[parseInt(m+(rows*m))] && squares[parseInt((rows*(m+1))+(m+1))]) {
       win = win + 1
       winner = squares[parseInt(m+(rows*m))]
     }
   }
-  if (win === rows-1) {
+  if (win === rows-1 || win >= parseInt(winCount-1)) {
     return winner
   } else {
     win = 0
@@ -313,12 +348,12 @@ function calculateWinner(index, squares) {
 
   //check right diagonal
   for (var n = rows-1; n < squares.length - 1; n += rows -1) {
-    if (squares[parseInt(n)] === squares[parseInt(n+rows-1)]) {
+    if (squares[parseInt(n)] === squares[parseInt(n+rows-1)] && squares[parseInt(n)] && squares[parseInt(n+rows-1)]) {
       win = win + 1
       winner = squares[parseInt(n)]
     }
   }
-  if (win === rows-1) {
+  if (win === rows-1 || win >= parseInt(winCount-1)) {
     return winner
   } else {
     win = 0
