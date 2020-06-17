@@ -15,6 +15,7 @@ class Board extends React.Component {
     super(props);
     this.state = {
       value: 3,
+      currentWinner: '',
       // scaleOption: [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
       scaleDropdown: Array(49).fill(null),
       boards:[],
@@ -41,8 +42,14 @@ class Board extends React.Component {
 
   async handleClick(i) {
     const squares = this.state.squares.slice()
-    // console.log(i)
-    if (await calculateWinner(i,squares) || squares[i]) {
+    const winner = await calculateWinner(i,squares)
+    if(winner) {
+      await this.setState({
+        currentWinner: winner
+      })
+    }
+    
+    if (this.state.currentWinner !== ''|| squares[i]) {
       return;
     }
     squares[i] = this.state.xIsNext ? 'X' : 'O';
@@ -105,6 +112,7 @@ class Board extends React.Component {
     const totalBox = parseInt(event.target.value) * parseInt(event.target.value)
     await this.setState({
       value: event.target.value,
+      currentWinner: '',
       squares: Array(totalBox).fill(null)
     });
   }
@@ -112,11 +120,13 @@ class Board extends React.Component {
   handleScore(winner) {
     (winner === 'X' ? 
       this.setState({
-        xScore: this.state.xScore + parseInt(1)
+        xScore: this.state.xScore + parseInt(1),
+        currentWinner: 'X'
       }) 
     : 
       this.setState({
-        oScore: this.state.oScore + parseInt(1)
+        oScore: this.state.oScore + parseInt(1),
+        currentWinner: 'O'
       })
     )
   }
@@ -126,7 +136,8 @@ class Board extends React.Component {
       value: 3,
       boards:[],
       squares: Array(9).fill(null),
-      xIsNext: true
+      xIsNext: true,
+      currentWinner: ''
     })
   }
 
@@ -161,10 +172,10 @@ class Board extends React.Component {
   }
 
   render() {
-    const winner = calculateWinner('', this.state.squares);
     let status;
-    if (winner) {
-      status = 'Winner: ' + winner;
+
+    if (this.state.currentWinner !== '') {
+      status = 'Winner: ' + this.state.currentWinner;
     } else {
       status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
     }
@@ -184,7 +195,7 @@ class Board extends React.Component {
           {xScore}
         </div>
         
-        <br/><br/><br/>
+        <br/><br/>
         <div className="status">{status}</div>
         <div>
           {this.renderScalable()}
@@ -208,45 +219,84 @@ class Game extends React.Component {
 }
 
 function calculateWinner(index, squares) {
-  // console.log(squares)
-
-  // console.log(Math.sqrt(squares.length))
   const rows = Math.sqrt(squares.length)
   var win = 0
   var winner = ''
+  const mod = parseInt(index % rows)
+  var colNum = mod
 
-  //check rows
-  for (let i = 0; i < rows -1; i++) {
-    for (let j = 0; j < rows -1 ; j++) {
-      if (squares[parseInt((j*rows)+i)] === squares[parseInt(((j+1)*rows)+i)]) {
-        win = win + 1
-        winner = squares[parseInt(j*rows)+i]
-      }
+  //column dynamic
+  for (let col = 0; col < rows-1; col++) {
+    if (squares[colNum] === squares[parseInt(colNum+rows)]) {
+      win = win + 1
+      winner = squares[colNum]
     }
+    parseInt(colNum+=rows)
+  }
+  if (win === rows-1 ) {
+    return winner
+  } else {
+    win = 0
+  }
 
-    if (win === rows-1 ) {
-      return winner
-    } else {
-      win = 0
+  //rows dynamic
+  //loop no 1 is to check row index
+  var low = 0
+  var high = parseInt(0+rows-1)
+  for ( let row = 0; row < rows; row++ ) {
+    if (index >= low && index <= high) {
+      break;
+    }
+    parseInt(low+= rows)
+    parseInt(high +=rows)
+  }
+  // loop no 2 is to check on certain row index
+  for (let rowCheck = low ; rowCheck < high; rowCheck++) {
+    if (squares[rowCheck] === squares[parseInt(rowCheck+1)]) {
+      win = win + 1
+      winner = squares[rowCheck]
     }
   }
+  if (win === rows-1 ) {
+    return winner
+  } else {
+    win = 0
+  }
+
+
+
+  // // check rows
+  // for (let i = 0; i < rows -1; i++) {
+  //   for (let j = 0; j < rows -1 ; j++) {
+  //     if (squares[parseInt((j*rows)+i)] === squares[parseInt(((j+1)*rows)+i)]) {
+  //       win = win + 1
+  //       winner = squares[parseInt(j*rows)+i]
+  //     }
+  //   }
+
+  //   if (win === rows-1 ) {
+  //     return winner
+  //   } else {
+  //     win = 0
+  //   }
+  // }
   
 
-  //check columns
-  for (let k = 0; k < rows -1; k++) {
-    for (let l = 0; l < rows -1 ; l++) {
-      if (squares[parseInt(l+(rows*k))] === squares[parseInt(l+1+(rows*k))]) {
-        win = win + 1
-        winner = squares[parseInt(l+(rows*k))]
-      }
-    }
+  // // check columns
+  // for (let k = 0; k < rows -1; k++) {
+  //   for (let l = 0; l < rows -1 ; l++) {
+  //     if (squares[parseInt(l+(rows*k))] === squares[parseInt(l+1+(rows*k))]) {
+  //       win = win + 1
+  //       winner = squares[parseInt(l+(rows*k))]
+  //     }
+  //   }
 
-    if (win === rows-1 ) {
-      return winner
-    } else {
-      win = 0
-    }
-  }
+  //   if (win === rows-1 ) {
+  //     return winner
+  //   } else {
+  //     win = 0
+  //   }
+  // }
   
   //check left diagonal
   for (var m = 0; m < rows - 1; m++) {
