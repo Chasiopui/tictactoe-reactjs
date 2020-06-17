@@ -43,6 +43,12 @@ class Board extends React.Component {
   }
 
   async handleClick(i) {
+    const validate = this.validation()
+    if (validate) {
+      alert(validate)
+      return
+    }
+
     const squares = this.state.squares.slice()
     const winner = await calculateWinner(i,squares, this.state.winningCondition)
     if(winner) {
@@ -126,6 +132,12 @@ class Board extends React.Component {
     });
   }
 
+  validation() {
+    if (this.state.value < this.state.winningCondition) {
+      return 'Scale must larger than Winning Condition'
+    }
+  }
+
   handleScore(winner) {
     (winner === 'X' ? 
       this.setState({
@@ -156,7 +168,7 @@ class Board extends React.Component {
       <div className="form-group">
         {/* <label htmlFor="sel1">Select Scale:</label> */}
         <form>
-          <div className="row">
+          <div className="row" style={{marginBottom: "4px"}}>
             <div className="col">
               <label htmlFor="sel1">Select Scale:</label>
             </div>
@@ -164,10 +176,7 @@ class Board extends React.Component {
               <label htmlFor="sel2">Winning Condition:</label>
             </div>
             <div className="col">
-              <label htmlFor="sel3"></label>
-            </div>
-            <div className="col">
-              <label htmlFor="sel3"></label>
+              <button type="button" className="btn btn-warning" onClick={() => window.location.reload(false)}>Restart Score</button>
             </div>
           </div>
           <div className="row">
@@ -195,9 +204,6 @@ class Board extends React.Component {
             </div>
             <div className="col">
               <button type="button" className="btn btn-primary" onClick={() => this.newGame()}>New Game</button>
-            </div>
-            <div className="col">
-              <button type="button" className="btn btn-warning" onClick={() => window.location.reload(false)}>Restart Score</button>
             </div>
           </div>
         </form>
